@@ -27,8 +27,10 @@ import static com.android.incallui.NotificationBroadcastReceiver.ACTION_ANSWER_V
 import static com.android.incallui.NotificationBroadcastReceiver.ACTION_DECLINE_INCOMING_CALL;
 import static com.android.incallui.NotificationBroadcastReceiver.ACTION_DECLINE_VIDEO_UPGRADE_REQUEST;
 import static com.android.incallui.NotificationBroadcastReceiver.ACTION_HANG_UP_ONGOING_CALL;
+import static com.android.incallui.NotificationBroadcastReceiver.ACTION_MUTE;
 import static com.android.incallui.NotificationBroadcastReceiver.ACTION_TURN_OFF_SPEAKER;
 import static com.android.incallui.NotificationBroadcastReceiver.ACTION_TURN_ON_SPEAKER;
+import static com.android.incallui.NotificationBroadcastReceiver.ACTION_UNMUTE;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -418,6 +420,7 @@ public class StatusBarNotifier
         || DialerCallState.isDialing(state)) {
       addHangupAction(builder);
       addSpeakerAction(builder, callAudioState);
+      addMuteAction(builder, callAudioState);
     } else if (state == DialerCallState.INCOMING || state == DialerCallState.CALL_WAITING) {
       addDismissAction(builder);
       if (call.isVideoCall()) {
@@ -825,6 +828,21 @@ public class StatusBarNotifier
     } else if ((callAudioState.getRoute() & CallAudioState.ROUTE_WIRED_OR_EARPIECE) != 0) {
       addSpeakerOnAction(builder);
     }
+  }
+
+  private void addMuteAction(Notification.Builder builder, CallAudioState callAudioState) {
+    boolean muted = callAudioState.isMuted();
+    builder.addAction(
+        new Notification.Action.Builder(
+                Icon.createWithResource(
+                    context,
+                    muted
+                        ? R.drawable.quantum_ic_mic_vd_theme_24
+                        : R.drawable.quantum_ic_mic_off_vd_theme_24),
+                context.getText(
+                    muted ? R.string.notification_action_unmute : R.string.notification_action_mute),
+                createNotificationPendingIntent(context, muted ? ACTION_UNMUTE : ACTION_MUTE))
+            .build());
   }
 
   private void addSpeakerOnAction(Notification.Builder builder) {
